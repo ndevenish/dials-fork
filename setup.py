@@ -23,7 +23,16 @@ setup_kwargs = {
     "packages": setuptools.find_packages(where="src"),
     "package_dir": {"": "src"},
     "package_data": {
-        "": ["*"],
+        "": ["*", "boost_python/*"],
+        "dials": [
+            "static/katex/*",
+            "static/katex/fonts/*",
+            "static/katex/contrib/*",
+            "static/js/*",
+            "static/css/*",
+            "templates/*",
+        ],
+        "dials.algorithms": ["spatial_indexing/*"],
     },
     "classifiers": [
         "Development Status :: 5 - Production/Stable",
