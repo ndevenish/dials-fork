@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
 
@@ -24,48 +25,6 @@ sys.path.insert(0, _src_path_root)
 
 import dials.precommitbx.nagger
 
-if sys.version_info.major == 2:
-    sys.exit("Python 2 is no longer supported")
-
-libtbx.pkg_utils.define_entry_points(
-    {
-        "dxtbx.profile_model": [
-            "gaussian_rs = dials.extensions.gaussian_rs_profile_model_ext:GaussianRSProfileModelExt",
-            "ellipsoid = dials.extensions.ellipsoid_profile_model_ext:EllipsoidProfileModelExt",
-        ],
-        "dxtbx.scaling_model_ext": [
-            "physical = dials.algorithms.scaling.model.model:PhysicalScalingModel",
-            "KB = dials.algorithms.scaling.model.model:KBScalingModel",
-            "array = dials.algorithms.scaling.model.model:ArrayScalingModel",
-            "dose_decay = dials.algorithms.scaling.model.model:DoseDecay",
-        ],
-        "dials.index.basis_vector_search": [
-            "fft1d = dials.algorithms.indexing.basis_vector_search:FFT1D",
-            "fft3d = dials.algorithms.indexing.basis_vector_search:FFT3D",
-            "real_space_grid_search = dials.algorithms.indexing.basis_vector_search:RealSpaceGridSearch",
-        ],
-        "dials.index.lattice_search": [
-            "low_res_spot_match = dials.algorithms.indexing.lattice_search:LowResSpotMatch"
-        ],
-        "dials.integration.background": [
-            "Auto = dials.extensions.auto_background_ext:AutoBackgroundExt",
-            "glm = dials.extensions.glm_background_ext:GLMBackgroundExt",
-            "gmodel = dials.extensions.gmodel_background_ext:GModelBackgroundExt",
-            "simple = dials.extensions.simple_background_ext:SimpleBackgroundExt",
-            "null = dials.extensions.null_background_ext:NullBackgroundExt",
-            "median = dials.extensions.median_background_ext:MedianBackgroundExt",
-        ],
-        "dials.integration.centroid": [
-            "simple = dials.extensions.simple_centroid_ext:SimpleCentroidExt"
-        ],
-        "dials.spotfinder.threshold": [
-            "dispersion = dials.extensions.dispersion_spotfinder_threshold_ext:DispersionSpotFinderThresholdExt",
-            "dispersion_extended = dials.extensions.dispersion_extended_spotfinder_threshold_ext:DispersionExtendedSpotFinderThresholdExt",
-        ],
-    }
-)
-
-
 try:
     from dials.util.version import dials_version
 
@@ -74,6 +33,29 @@ except Exception:
     pass
 
 dials.precommitbx.nagger.nag()
+
+
+def _install_package_setup(package: str):
+    """Install as a regular/editable python package"""
+
+    # We need to find this from libtbx.env because libtbx doesn't read
+    # this properly, as a module - it's just eval'd in scope
+    root_path = libtbx.env.dist_path(package)
+
+    # Call pip
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--no-build-isolation",
+            "--no-deps",
+            "-e",
+            root_path,
+        ],
+        check=True,
+    )
 
 
 def _create_dials_env_script():
@@ -226,7 +208,7 @@ for cmd in [
 ]:
     ac = env.AutoComplete(cmd, [dispatcher_outer(cmd), dispatcher_inner(cmd)])
     Requires(ac, Dir(libtbx.env.under_build("lib")))
-    Depends(ac, os.path.join(libtbx.env.dist_path("dials"), "util", "options.py"))
+    Depends(ac, os.path.join(libtbx.env.dist_path("dials"), "src", "dials", "util", "options.py"))
     Depends(ac, os.path.join(libtbx.env.dist_path("dials"), "util", "autocomplete.sh"))
 """.format(
                 "\n".join([f'    "{cmd}",' for cmd in command_list])
@@ -245,5 +227,6 @@ for cmd in [
         script.write("}\n")
 
 
+_install_package_setup("dials")
 _create_dials_env_script()
 _install_dials_autocompletion()
