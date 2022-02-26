@@ -1,8 +1,26 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
 import libtbx.pkg_utils
+
+# Hack:
+# libtbx_refresh needs to import from the package before it's configured.
+# Historically, without src/ layout, the full package was implicitly on
+# the sys.path, so this worked. Now, it doesn't - other packages might
+# attempt to import dials, which would only get a namespace package. This
+# means even just setting the path wouldn't work. So, check to see if
+# we have a namespace package imported, remove it, set the __path__, then
+# import the real copy of DIALS.
+#
+# This is probably... not something we want to do, but it allows moving
+# to src/ without drastically changing this part of the setup.
+_dials = sys.modules.get("dials")
+if _dials and _dials.__file__ is None:
+    _src_path_root = str(Path(libtbx.env.dist_path("dials")).joinpath("src"))
+    del sys.modules["dials"]
+sys.path.insert(0, _src_path_root)
 
 import dials.precommitbx.nagger
 
@@ -174,7 +192,7 @@ def _install_dials_autocompletion():
         pass
 
     # Build a list of autocompleteable commands
-    commands_dir = os.path.join(dist_path, "command_line")
+    commands_dir = os.path.join(dist_path, "src", "dials", "command_line")
     command_list = []
     for filename in sorted(os.listdir(commands_dir)):
         if not filename.startswith("_") and filename.endswith(".py"):

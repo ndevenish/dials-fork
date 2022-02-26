@@ -8,6 +8,15 @@ Import("env_etc")
 env_etc.dials_dist = os.path.join(libtbx.env.dist_path("dials"), "src", "dials")
 env_etc.dials_include = os.path.dirname(env_etc.dials_dist)
 if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
+    # XFEL specifically sets up xfel common includes using env_etc.dials_include,
+    # but then doesn't use them, instead using the global env_boost_python_ext.
+    #
+    # Add the DIALS include to this global environment
+    Import("env_boost_python_ext")
+    env_etc.include_registry.append(
+        env=env_boost_python_ext, paths=[env_etc.dials_include]
+    )
+
     Import("env_no_includes_boost_python_ext")
     env = env_no_includes_boost_python_ext.Clone()
     env_etc.enable_more_warnings(env=env)
@@ -24,7 +33,9 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
         env_etc.dials_include,
     ]
     # following lines can be removed once Python2.7 compatibility is dropped
-    msgpack = os.path.join(os.path.dirname(env_etc.dials_dist), "msgpack-3.1.1", "include")
+    msgpack = os.path.join(
+        os.path.dirname(env_etc.dials_dist), "msgpack-3.1.1", "include"
+    )
     if os.path.exists(str(msgpack)):
         include_paths.append(msgpack)
     ########################################################################
