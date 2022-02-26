@@ -213,7 +213,7 @@ def dispatcher_outer(name):
     return os.path.join(libtbx.env.under_build("bin"), name)\n\n
 def dispatcher_inner(name):
     return os.path.join(
-        libtbx.env.dist_path("dials"), "command_line", "%s.py" % name.partition(".")[2]
+        libtbx.env.dist_path("dials"), "src", "dials", "command_line", "%s.py" % name.partition(".")[2]
     )\n\n
 env.Append(
     BUILDERS={{
