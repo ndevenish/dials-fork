@@ -4,6 +4,8 @@ import os
 import shutil
 import sys
 import traceback
+import glob
+import re
 
 # This file needs to remain Python 2.7 compatible
 # due to the underlying cctbx installer logic
@@ -67,6 +69,35 @@ class installer(install_distribution.installer):
         try:
             # Deliberately call our alternative rather than the super()
             self.reconfigure_as_libtbx_does(log)
+
+            if sys.platform == "darwin":
+                # Manually rewrite the base python executable in dispatchers
+                #
+                # Without this, you cannot run e.g. dials.image_viewer.
+                python_app = os.path.abspath(
+                    os.path.join(
+                        self.base_dir, "python.app", "Contents", "MacOS", "python"
+                    )
+                )
+                if os.path.exists(python_app):
+                    # The libtbx dispatchers prepend "../conda_base/bin"
+                    # to the LIBTBX_PYEXE_BASENAME, so we need to build
+                    # the path relative to this.
+                    python_app = "../python.app/Contents/MacOS/python"
+                    # Only rewrite dials....._viewer dispatchers
+                    for dispatcher in glob.glob(
+                        os.path.join(self.build_dir, "bin", "dials.*viewer")
+                    ):
+                        with open(dispatcher, "r") as f:
+                            raw_data = f.read()
+                        out_data = re.sub(
+                            r'LIBTBX_PYEXE_BASENAME="[^"]+"',
+                            'LIBTBX_PYEXE_BASENAME="%s"' % python_app,
+                            raw_data,
+                        )
+                        with open(dispatcher, "w") as f:
+                            f.write(out_data)
+
         except Exception:
             if not self.options.verbose:
                 print("\n" + " -=-" * 20)
