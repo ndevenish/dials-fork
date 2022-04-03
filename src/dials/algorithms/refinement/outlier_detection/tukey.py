@@ -15,7 +15,9 @@ class Tukey(CentroidOutlier):
         min_num_obs=20,
         separate_experiments=True,
         separate_panels=True,
+        separate_images=False,
         block_width=None,
+        nproc=1,
         iqr_multiplier=1.5,
     ):
 
@@ -27,7 +29,9 @@ class Tukey(CentroidOutlier):
             min_num_obs=min_num_obs,
             separate_experiments=separate_experiments,
             block_width=block_width,
+            nproc=nproc,
             separate_panels=separate_panels,
+            separate_images=separate_images,
         )
 
         self._iqr_multiplier = iqr_multiplier

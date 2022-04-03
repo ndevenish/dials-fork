@@ -23,6 +23,48 @@ if _dials and _dials.__file__ is None:
     del sys.modules["dials"]
 sys.path.insert(0, _src_path_root)
 
+if sys.version_info.major == 2:
+    sys.exit("Python 2 is no longer supported")
+
+libtbx.pkg_utils.define_entry_points(
+    {
+        "dxtbx.profile_model": [
+            "gaussian_rs = dials.extensions.gaussian_rs_profile_model_ext:GaussianRSProfileModelExt",
+            "ellipsoid = dials.extensions.ellipsoid_profile_model_ext:EllipsoidProfileModelExt",
+        ],
+        "dxtbx.scaling_model_ext": [
+            "physical = dials.algorithms.scaling.model.model:PhysicalScalingModel",
+            "KB = dials.algorithms.scaling.model.model:KBScalingModel",
+            "array = dials.algorithms.scaling.model.model:ArrayScalingModel",
+            "dose_decay = dials.algorithms.scaling.model.model:DoseDecay",
+        ],
+        "dials.index.basis_vector_search": [
+            "fft1d = dials.algorithms.indexing.basis_vector_search:FFT1D",
+            "fft3d = dials.algorithms.indexing.basis_vector_search:FFT3D",
+            "real_space_grid_search = dials.algorithms.indexing.basis_vector_search:RealSpaceGridSearch",
+        ],
+        "dials.index.lattice_search": [
+            "low_res_spot_match = dials.algorithms.indexing.lattice_search:LowResSpotMatch"
+        ],
+        "dials.integration.background": [
+            "Auto = dials.extensions.auto_background_ext:AutoBackgroundExt",
+            "glm = dials.extensions.glm_background_ext:GLMBackgroundExt",
+            "gmodel = dials.extensions.gmodel_background_ext:GModelBackgroundExt",
+            "simple = dials.extensions.simple_background_ext:SimpleBackgroundExt",
+            "null = dials.extensions.null_background_ext:NullBackgroundExt",
+            "median = dials.extensions.median_background_ext:MedianBackgroundExt",
+        ],
+        "dials.integration.centroid": [
+            "simple = dials.extensions.simple_centroid_ext:SimpleCentroidExt"
+        ],
+        "dials.spotfinder.threshold": [
+            "dispersion = dials.extensions.dispersion_spotfinder_threshold_ext:DispersionSpotFinderThresholdExt",
+            "dispersion_extended = dials.extensions.dispersion_extended_spotfinder_threshold_ext:DispersionExtendedSpotFinderThresholdExt",
+            "radial_profile = dials.extensions.radial_profile_spotfinder_threshold_ext:RadialProfileSpotFinderThresholdExt",
+        ],
+    }
+)
+
 import dials.precommitbx.nagger
 
 try:
