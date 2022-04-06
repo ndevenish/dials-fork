@@ -17,12 +17,13 @@ from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
-from annlib_ext import AnnAdaptorSelfInclude
+from sklearn.neighbors import NearestNeighbors
 
 import boost_adaptbx.boost.python
 import cctbx.array_family.flex
 import cctbx.miller
 import libtbx.smart_open
+from dxtbx import flumpy
 from scitbx import matrix
 
 import dials.extensions.glm_background_ext
@@ -697,19 +698,18 @@ class _:
             z *= scale[2]
             ref = cctbx.array_family.flex.vec3_double(x, y, z)
 
-        x = xyz.as_double().as_1d()
-        r = ref.as_double().as_1d()
-        ann = AnnAdaptorSelfInclude(r, 3)
-        ann.query(x)
-
-        mm = cctbx.array_family.flex.size_t_range(xyz.size())
-        nn, distance = ann.nn.as_size_t(), cctbx.array_family.flex.sqrt(ann.distances)
+        n_xyz = flumpy.to_numpy(xyz)
+        n_ref = flumpy.to_numpy(ref)
+        nbrs = NearestNeighbors(n_neighbors=1).fit(n_ref)
+        distance, nn = nbrs.kneighbors(n_xyz)
 
         sel = distance <= max_separation
 
-        mm = mm.select(sel)
-        nn = nn.select(sel)
-        distance = distance.select(sel)
+        mm = np.indices([xyz.size()], dtype="uint").T
+        mm = flumpy.from_numpy(mm[sel])
+        nn = flumpy.from_numpy(nn[sel].astype("uint"))
+        distance = flumpy.from_numpy(distance[sel])
+
         return mm, nn, distance
 
     def compute_zeta(self, experiment):
