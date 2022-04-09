@@ -8,7 +8,6 @@ import numpy as np
 
 import iotbx.phil
 from cctbx import sgtbx
-from xfel.clustering.cluster_groups import unit_cell_info
 
 from dials.algorithms.clustering.unit_cell import UnitCellCluster
 from dials.algorithms.symmetry.cosym import CosymAnalysis
@@ -31,6 +30,11 @@ from dials.util.multi_dataset_handling import (
 from dials.util.observer import Subject
 from dials.util.options import ArgumentParser, reflections_and_experiments_from_files
 from dials.util.version import dials_version
+
+try:
+    from xfel.clustering.cluster_groups import unit_cell_info
+except ModuleNotFoundError:
+    unit_cell_info = None
 
 logger = logging.getLogger("dials.command_line.cosym")
 
@@ -278,7 +282,8 @@ class cosym(Subject):
             schnell=False,
             doplot=False,
         )
-        logger.info(unit_cell_info(self.unit_cell_clusters))
+        if unit_cell_info is not None:
+            logger.info(unit_cell_info(self.unit_cell_clusters))
         largest_cluster_lattice_ids = None
         for cluster in self.unit_cell_clusters:
             cluster_lattice_ids = [m.lattice_id for m in cluster.members]
