@@ -17,13 +17,17 @@ from dxtbx.model.experiment_list import (
 )
 from libtbx.phil import parse
 from scitbx import matrix
-from xfel.clustering.cluster_groups import unit_cell_info
 
 import dials.util
 from dials.algorithms.integration.stills_significance_filter import SignificanceFilter
 from dials.array_family import flex
 from dials.util import tabulate
 from dials.util.options import ArgumentParser, flatten_experiments
+
+try:
+    from xfel.clustering.cluster_groups import unit_cell_info
+except ModuleNotFoundError:
+    unit_cell_info = None
 
 logger = logging.getLogger(__name__)
 
@@ -366,7 +370,8 @@ class Cluster:
             schnell=False,
             doplot=dendrogram,
         )
-        print(unit_cell_info(self.clusters))
+        if unit_cell_info is not None:
+            print(unit_cell_info(self.clusters))
         self.clustered_frames = {
             int(c.cname.split("_")[1]): c.members for c in self.clusters
         }
