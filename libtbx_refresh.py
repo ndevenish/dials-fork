@@ -21,7 +21,7 @@ _dials = sys.modules.get("dials")
 if _dials and _dials.__file__ is None:
     _src_path_root = str(Path(libtbx.env.dist_path("dials")).joinpath("src"))
     del sys.modules["dials"]
-sys.path.insert(0, _src_path_root)
+    sys.path.insert(0, _src_path_root)
 
 if sys.version_info.major == 2:
     sys.exit("Python 2 is no longer supported")
