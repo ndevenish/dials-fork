@@ -52,7 +52,8 @@ setup_kwargs = {
         "libtbx.precommit": ["dials=dials"],
         "libtbx.dispatcher.script": ["pytest=pytest"],
         "dxtbx.profile_model": [
-            "gaussian_rs = dials.extensions.gaussian_rs_profile_model_ext:GaussianRSProfileModelExt"
+            "gaussian_rs = dials.extensions.gaussian_rs_profile_model_ext:GaussianRSProfileModelExt",
+            "ellipsoid = dials.extensions.ellipsoid_profile_model_ext:EllipsoidProfileModelExt",
         ],
         "dxtbx.scaling_model_ext": [
             "physical = dials.algorithms.scaling.model.model:PhysicalScalingModel",
@@ -77,11 +78,12 @@ setup_kwargs = {
             "median = dials.extensions.median_background_ext:MedianBackgroundExt",
         ],
         "dials.integration.centroid": [
-            "simple = dials.extensions.simple_centroid_ext:SimpleCentroidExt"
+            "simple = dials.extensions.simple_centroid_ext:SimpleCentroidExt",
         ],
         "dials.spotfinder.threshold": [
             "dispersion = dials.extensions.dispersion_spotfinder_threshold_ext:DispersionSpotFinderThresholdExt",
             "dispersion_extended = dials.extensions.dispersion_extended_spotfinder_threshold_ext:DispersionExtendedSpotFinderThresholdExt",
+            "radial_profile = dials.extensions.radial_profile_spotfinder_threshold_ext:RadialProfileSpotFinderThresholdExt",
         ],
     },
 }
