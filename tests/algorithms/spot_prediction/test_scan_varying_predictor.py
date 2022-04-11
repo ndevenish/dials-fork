@@ -20,7 +20,8 @@ from dials.algorithms.refinement.prediction.managed_predictors import (
     ScansRayPredictor,
 )
 from dials.algorithms.spot_prediction import IndexGenerator, ray_intersection
-from dials.tests.algorithms.refinement import setup_geometry
+
+from ..refinement import setup_geometry
 
 
 def setup_models(args):

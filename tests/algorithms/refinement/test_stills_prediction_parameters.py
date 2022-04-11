@@ -29,7 +29,8 @@ from dials.algorithms.refinement.prediction.managed_predictors import (
 )
 from dials.algorithms.spot_prediction import IndexGenerator
 from dials.array_family import flex
-from dials.tests.algorithms.refinement.setup_geometry import Extract
+
+from .setup_geometry import Extract
 
 
 class _Test:
