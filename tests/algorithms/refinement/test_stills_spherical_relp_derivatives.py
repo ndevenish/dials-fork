@@ -29,6 +29,7 @@ from dials.algorithms.refinement.prediction.managed_predictors import ScansRayPr
 from dials.algorithms.spot_prediction import IndexGenerator, StillsReflectionPredictor
 from dials.array_family import flex
 
+from . import geometry_phil
 from .setup_geometry import Extract
 
 
@@ -237,12 +238,7 @@ def test():
   geometry.parameters.crystal.c.length.range=40 50;
   geometry.parameters.random_seed = 42"""
 
-    master_phil = parse(
-        """
-      include scope dials.tests.algorithms.refinement.geometry_phil
-      """,
-        process_includes=True,
-    )
+    master_phil = parse(geometry_phil)
 
     models = Extract(master_phil, overrides)
 

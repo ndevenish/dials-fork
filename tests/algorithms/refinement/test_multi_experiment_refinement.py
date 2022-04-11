@@ -33,7 +33,7 @@ from dials.algorithms.refinement.prediction.managed_predictors import (
 from dials.algorithms.refinement.refiner import RefinerFactory, phil_scope
 from dials.algorithms.spot_prediction import IndexGenerator, ray_intersection
 
-from . import setup_geometry
+from . import geometry_phil, minimiser_phil, setup_geometry
 
 
 def test(args=[]):
@@ -42,13 +42,7 @@ def test(args=[]):
     # Setup experimental models #
     #############################
 
-    master_phil = parse(
-        """
-        include scope dials.tests.algorithms.refinement.geometry_phil
-        include scope dials.tests.algorithms.refinement.minimiser_phil
-        """,
-        process_includes=True,
-    )
+    master_phil = parse(f"{geometry_phil}\n{minimiser_phil}")
 
     models = setup_geometry.Extract(
         master_phil,

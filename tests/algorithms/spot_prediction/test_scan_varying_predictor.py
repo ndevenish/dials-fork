@@ -21,19 +21,14 @@ from dials.algorithms.refinement.prediction.managed_predictors import (
 )
 from dials.algorithms.spot_prediction import IndexGenerator, ray_intersection
 
-from ..refinement import setup_geometry
+from ..refinement import geometry_phil, setup_geometry
 
 
 def setup_models(args):
     """setup the experimental models"""
 
     # Setup experimental models
-    master_phil = parse(
-        """
-      include scope dials.tests.algorithms.refinement.geometry_phil
-      """,
-        process_includes=True,
-    )
+    master_phil = parse(geometry_phil)
 
     models = setup_geometry.Extract(master_phil, cmdline_args=args)
 
