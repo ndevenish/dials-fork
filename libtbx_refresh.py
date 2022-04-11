@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+import inspect
+import os
 import subprocess
 import sys
 from pathlib import Path
 
-import libtbx.pkg_utils
+import libtbx
+
+try:
+    import pkg_resources
+except ModuleNotFoundError:
+    pkg_resources = None
 
 # Hack:
 # libtbx_refresh needs to import from the package before it's configured.
@@ -36,6 +43,88 @@ except Exception:
     pass
 
 dials.precommitbx.nagger.nag()
+
+
+def _install_setup_readonly_fallback(package_name: str):
+    """
+    Partially install package in the libtbx build folder.
+    This is a less complete installation - base python console_scripts
+    entrypoints will not be installed, but the basic package metadata
+    and other entrypoints will be enumerable through dispatcher black magic
+    """
+    root_path = libtbx.env.dist_path(package_name)
+    import_path = os.path.join(root_path, "src")
+
+    # Install this into a build/dxtbx subfolder
+    build_path = abs(libtbx.env.build_path / package_name)
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--prefix",
+            build_path,
+            "--no-build-isolation",
+            "--no-deps",
+            "-e",
+            root_path,
+        ],
+        check=True,
+    )
+
+    # Get the actual environment being configured (NOT libtbx.env)
+    env = _get_real_env_hack_hack_hack()
+
+    # Update the libtbx environment pythonpaths to point to the source
+    # location which now has an .egg-info folder; this will mean that
+    # the PYTHONPATH is written into the libtbx dispatchers
+    rel_path = libtbx.env.as_relocatable_path(import_path)
+    if rel_path not in env.pythonpath:
+        env.pythonpath.insert(0, rel_path)
+
+    # Update the sys.path so that we can find the .egg-info in this process
+    # if we do a full reconstruction of the working set
+    if import_path not in sys.path:
+        sys.path.insert(0, import_path)
+
+    # ...and add to the existing pkg_resources working_set
+    if pkg_resources:
+        pkg_resources.working_set.add_entry(import_path)
+
+    # Add the src/ folder as an extra command_line_locations for dispatchers
+    module = env.module_dict[package_name]
+    if f"src/{package_name}" not in module.extra_command_line_locations:
+        module.extra_command_line_locations.append(f"src/{package_name}")
+
+    # Regenerate the DIALS dispatchers now we've properly configured
+    module.process_command_line_directories()
+
+
+def _get_real_env_hack_hack_hack():
+    """
+    Get the real, currently-being-configured libtbx.env environment.
+    This is not libtbx.env, because although libtbx.env_config.environment.cold_start
+    does:
+        self.pickle()
+        libtbx.env = self
+    the first time there is an "import libtbx.load_env" this environment
+    gets replaced by unpickling the freshly-written libtbx_env file onto
+    libtbx.env, thereby making the environment accessed via libtbx.env
+    *not* the actual one that is currently being constructed.
+    So, the only way to get this environment being configured in order
+    to - like - configure it, is to walk the stack trace and extract the
+    self object from environment.refresh directly.
+    """
+    for frame in inspect.stack():
+        if (
+            frame.filename.endswith("env_config.py")
+            and frame.function == "refresh"
+            and "self" in frame.frame.f_locals
+        ):
+            return frame.frame.f_locals["self"]
+
+    raise RuntimeError("Could not determine real libtbx.env_config.environment object")
 
 
 def _install_package_setup(package: str):
@@ -230,6 +319,7 @@ for cmd in [
         script.write("}\n")
 
 
-_install_package_setup("dials")
+# _install_package_setup("dials")
+_install_setup_readonly_fallback("dials")
 _create_dials_env_script()
 _install_dials_autocompletion()
