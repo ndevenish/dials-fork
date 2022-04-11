@@ -48,7 +48,7 @@ from dials.algorithms.refinement.target import (
 from dials.algorithms.spot_prediction import IndexGenerator, ray_intersection
 from dials.array_family import flex
 
-from . import setup_geometry, setup_minimiser
+from . import geometry_phil, minimiser_phil, setup_geometry, setup_minimiser
 
 
 def make_panel_in_array(array_elt, reference_panel):
@@ -80,11 +80,10 @@ def make_panel_in_array(array_elt, reference_panel):
 
 # Setup experimental models
 master_phil = parse(
+    f"""
+    {geometry_phil}
+    {minimiser_phil}
     """
-    include scope dials.tests.algorithms.refinement.geometry_phil
-    include scope dials.tests.algorithms.refinement.minimiser_phil
-    """,
-    process_includes=True,
 )
 
 
