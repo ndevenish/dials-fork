@@ -629,14 +629,19 @@ class PowderCalibrator:
         self.geometry = Geometry(self.expt)
         self.detector = self.geometry.detector
 
+        # Do a case-insensitive lookup to match the provided standard
+        matched_standards = [
+            x for x in PowderCalibrator.available_calibrants if x.lower() == standard
+        ]
+
         # Check if calibrant name makes sense, else complain
-        if standard in PowderCalibrator.available_calibrants:
-            self.standard = standard
+        if matched_standards:
+            self.standard = matched_standards[0]
         else:
             PowderCalibrator.list_calibrants()
             exit(f"The standard name {standard} was not recognised")
 
-        self.calibrant = pfCalibrant(standard)
+        self.calibrant = pfCalibrant(self.standard)
         self.calibrant.wavelength = _convert_units(
             self.expt_params.wavelength, "A", "m"
         )
