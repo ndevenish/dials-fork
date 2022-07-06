@@ -516,7 +516,7 @@ class EyeballWidget:
             cal_img = self.calibrant.fake_calibration_image(self.geometry, W=w)
 
         # TODO: fix that hardcoded value
-        cal_img_masked = ma.masked_where(cal_img <= 1e-3, cal_img)
+        cal_img_masked = ma.masked_where(cal_img == 0.0, cal_img)
 
         return cal_img_masked
 
