@@ -7,6 +7,7 @@ methods to define how these are composed into one model.
 
 from __future__ import annotations
 
+import importlib.metadata
 import logging
 
 from libtbx import Auto, phil
@@ -48,7 +49,6 @@ from dials_scaling_ext import (
 
 logger = logging.getLogger("dials")
 
-import pkg_resources
 
 base_model_phil_str = """\
 correction.fix = None
@@ -1506,7 +1506,8 @@ def calc_n_param_from_bins(value_min, value_max, n_bins):
 
 model_phil_scope = phil.parse("")
 _dxtbx_scaling_models = {
-    ep.name: ep for ep in pkg_resources.iter_entry_points("dxtbx.scaling_model_ext")
+    ep.name: ep
+    for ep in importlib.metadata.entry_points(group="dxtbx.scaling_model_ext")
 }
 assert (
     _dxtbx_scaling_models

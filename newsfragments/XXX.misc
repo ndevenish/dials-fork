@@ -1,0 +1,2 @@
+Replace pkg_resources with importlib.metadata.
+
