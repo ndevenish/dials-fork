@@ -76,7 +76,7 @@ namespace dials { namespace util {
       p->ncryst = 1;
       p->time1 = 0.0;
       p->time2 = 0.0;
-      sprintf((char*)&(p->title), "Batch %d", batch_num);
+      snprintf((char*)&(p->title), sizeof(p->title), "Batch %d", batch_num);
       p->ndet = 1;
       p->theta[0] = 0.0;
       p->theta[1] = 0.0;
