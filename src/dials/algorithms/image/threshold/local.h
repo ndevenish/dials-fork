@@ -10,6 +10,9 @@
  */
 #ifndef DIALS_ALGORITHMS_IMAGE_THRESHOLD_LOCAL_H
 #define DIALS_ALGORITHMS_IMAGE_THRESHOLD_LOCAL_H
+#include <fstream>
+#include <iomanip>
+#include <sstream>
 
 #include <cmath>
 #include <vector>
@@ -595,11 +598,47 @@ namespace dials { namespace algorithms {
       // Cast the buffer to the table type
       af::ref<Data<T> > table(reinterpret_cast<Data<T> *>(&buffer_[0]), buffer_.size());
 
+      // if (out.is_open()) {
+      std::size_t ysize = src.accessor()[0];
+      std::size_t xsize = src.accessor()[1];
+      // // std::ofstream
+      // for (std::size_t j = 1763; j <= 1765; ++j) {
+      //   for (std::size_t i = 468; i <= 472; ++i) {
+      //     std::size_t k = ysize * j + i;
+      //     out << std::setw(4) << i << ", " << std::setw(4) << j << " = " << src[k]
+      //         << " [mask=" << mask[k] << "]"
+      //         << "\n";
+      //   }
+      // }
+
       // compute the summed area table
       compute_sat(table, src, mask);
 
       // Compute the image threshold
       compute_threshold(table, src, mask, dst);
+
+      static int img = 0;  // The current image
+      // Build filename
+      std::ostringstream oss;
+      oss << "dials_pixels_" << std::setw(5) << std::setfill('0') << img << ".txt";
+      img += 1;
+      // Open the file
+      std::ofstream out(oss.str());
+      // out << std::setw(4) << 470 << ", " << std::setw(4) << 1764 << " = " << src[k]
+      //     << "[mask=" << mask[k] << "]"
+      //     << "\n";
+      for (std::size_t j = 0, k = 0; j < ysize; ++j) {
+        for (std::size_t i = 0; i < xsize; ++i, ++k) {
+          if (dst[k]) {
+            out << std::setw(4) << i << ", " << std::setw(4) << j << " = "
+                << src[k]
+                // << "[mask=" << mask[k] << "]"
+                << "\n";
+          }
+        }
+      }
+      out.close();
+      // }
     }
 
     /**
