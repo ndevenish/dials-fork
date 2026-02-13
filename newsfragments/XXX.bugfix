@@ -1,1 +1,1 @@
-Revert pandas pin now dxtbx has fixed the underlying issue.
+Fix places where pandas internal arrays were rewritten, which is now forbidden.
