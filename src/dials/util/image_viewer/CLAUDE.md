@@ -92,6 +92,38 @@ Files matching `*_frame_plugin.py` in `slip_viewer/` are dynamically loaded at s
 - **scikit-image** — Ellipse fitting
 - **zmq** (optional) — Remote image streaming via ZMQ PULL socket
 
+## Brightness Rendering
+
+The brightness slider (1-1000, default 10) controls a `correction` multiplier that maps raw pixel values into a 0-255 display range. The C++ implementation lives in `iotbx/detectors/display.h` (in the cctbx_project repo, not this one).
+
+### Computing the correction factor
+
+The `correction` is auto-scaled to the image content so that the brightness slider has consistent perceptual effect across different images:
+
+- **Single-panel** (`FlexImage` constructor → `global_bright_contrast()`): collects active-area pixels, uses `std::nth_element` to find the 90th percentile value, then `correction = brightness * 0.4 / p90`
+- **Multi-panel** (`generic_flex_image` → `followup_brightness_scale()`): computes mean, builds a 100-bin histogram, walks it to find the 90th percentile, same formula: `correction = brightness * 0.4 / p90`
+
+### Pixel value mapping (`bright_contrast()`)
+
+For each pixel: `outvalue = 256 * (1.0 - pixel * correction)`, clamped to [0, 255]. This is an inverted mapping — higher raw values produce lower output values. Special sentinel values bypass this: `-2` (Pilatus inactive) and `INT_MIN` (masked) → flag 1000, above saturation → flag 2000.
+
+### Color scheme application (`adjust()`)
+
+After `bright_contrast()` produces 0-255 values, `adjust()` maps to RGB:
+- **Grayscale**: value used directly
+- **Invert**: `255 - value`
+- **Rainbow**: HSV with `h = 255 * sqrt(value/255)`
+- **Heatmap**: `ratio = ((255-value)/255)²` → heatmap color
+- Flag 1000 (inactive/masked) → red in grayscale, black in rainbow/heatmap
+- Flag 2000 (saturated) → yellow in grayscale, white in rainbow, green in heatmap
+
+### Python-side flow
+
+1. Slider/text control fires `OnUpdateBrightness` in `spotfinder_frame.py` → sets `settings.brightness`
+2. `update_settings()` detects change, calls `tiles.update_brightness(b, color_scheme)` in `tile_generation.py`
+3. `update_brightness()` rebuilds the FlexImage with `brightness=b/100`, flushes the tile cache, calls `adjust()`
+4. PySlip re-renders all visible tiles from the new FlexImage
+
 ## Notable Design Decisions
 
 - **Tiled rendering**: PySlip breaks detector images into 256x256 tiles at multiple zoom levels, enabling smooth pan/zoom of very large images
