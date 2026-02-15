@@ -45,7 +45,7 @@ Pre-commit hooks handle linting and formatting automatically.
 - **`model/`** — Data model classes (ExperimentList, detector, beam, crystal, etc.)
 - **`array_family/`** — Flex array data structures (wrapping C++ flex module)
 - **`extensions/`** — Plugin system for algorithm backends (background, centroid, scaling models, profile models, spotfinder thresholds), registered via setuptools entry points
-- **`util/`** — Shared utilities
+- **`util/`** — Shared utilities. Notable sub-module: `util/image_viewer/` — wxPython GUI for viewing diffraction images (`dials.image_viewer`). Uses a "slippy map" tiled renderer (PySlip) with layer-based overlays for spots, predictions, masks, resolution rings, and Miller indices. Class hierarchy: `rstbx_frame.XrayFrame` → `slip_viewer/frame.XrayFrame` → `SpotFrame`. See `src/dials/util/image_viewer/CLAUDE.md` for detailed architecture
 - **`nexus/`** — NeXus file format support
 
 ### Key Dependencies
