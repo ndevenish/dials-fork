@@ -124,6 +124,40 @@ After `bright_contrast()` produces 0-255 values, `adjust()` maps to RGB:
 3. `update_brightness()` rebuilds the FlexImage with `brightness=b/100`, flushes the tile cache, calls `adjust()`
 4. PySlip re-renders all visible tiles from the new FlexImage
 
+## Zoomed-Out Rendering (Reduced Images)
+
+When zoomed out (negative zoom levels -1 to -3), `FlexImage` in `iotbx/detectors/display.h` reduces the image before rendering. The Python side calls `setZoom(zoom_level)` → `setWindowCart(tile_x, tile_y, fraction)` → `prep_string()` for each 256×256 tile.
+
+### `setZoom(zoom_level)` — binning factor
+
+- `zoom = 2^zoom_level` (e.g., level -3 → zoom = 0.125)
+- `binning = ceil(1/zoom)` — a power of 2 (e.g., 8 at level -3)
+- Rebuilds the `channels` array at reduced dimensions `size/binning`, then calls `adjust()`
+
+| zoom level | zoom  | binning | magnification |
+|------------|-------|---------|---------------|
+| -3         | 0.125 | 8       | 1/8×          |
+| -2         | 0.25  | 4       | 1/4×          |
+| -1         | 0.5   | 2       | 1/2×          |
+| 0          | 1     | 1       | 1×            |
+
+### `raw_to_sampled()` — **max-pooling**
+
+Called inside `adjust()`. For each output pixel `(i, j)`, takes the **maximum** raw value from the `binning × binning` block of detector pixels:
+
+```
+sampled(i,j) = max(raw(binning*i + di, binning*j + dj))
+               for di, dj in [0, binning)
+```
+
+Max-pooling (not averaging) preserves bright diffraction spots — the scientifically important features — which would be diluted by averaging. There is a commented-out averaging path for binning==2 in the source but it is not active.
+
+### `setWindowCart()` and `prep_string()`
+
+`setWindowCart(tile_x, tile_y, fraction)` computes the export window within the already-binned `channels` array. `prep_string()` then directly copies `channels(c, i, j)` into the RGB byte string — no further resampling, since the image was already reduced by `raw_to_sampled()`. Out-of-bounds pixels are filled pink (255, 228, 228).
+
+The Python-side binning factor is exposed as `tiles.get_binning()` → returns `2^(-zoom_level)` for negative levels, 1 otherwise.
+
 ## Notable Design Decisions
 
 - **Tiled rendering**: PySlip breaks detector images into 256x256 tiles at multiple zoom levels, enabling smooth pan/zoom of very large images
